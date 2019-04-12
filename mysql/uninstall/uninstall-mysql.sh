@@ -2,8 +2,16 @@
 #
 # MySQL Uninstall Script.
 #
-# Find MySQL process pid and kill it by -9 
+# The Script will uninstall Mysql-Related Dependencles, Condifguration
+# And data. And it's not recoverable!
 #
+# In addition, mysql users and groups will also be removed!
+#
+# So,Make sure all relevant content is deprecated before executing the script!
+#
+
+
+# Find MySQL process pid and kill it by -9 
 
 cur=$$
 echo $cur
@@ -17,9 +25,9 @@ do
   fi
 done
 
-#
+
 # Remove mysql-related dependencies
-#
+
 _mysqlLibs=$(rpm -qa |grep -i mysql)
 
 for _lib in $_mysqlLibs
@@ -30,10 +38,10 @@ do
   sudo yum remove -y $_app
 done
 
-#
-# Remove mysql related files and folders
-#
-_mysqlFiles=$(find / -name mysql*)
+
+# Remove mysql related files,folders and config
+
+_mysqlFiles=$(find / -name "mysql*" -o -name "my.cnf*")
 
 for _file in $_mysqlFiles
 do
@@ -47,5 +55,11 @@ do
   fi
 done
 
-echo "Congratulation!"
-echo "The mysql service was successfully removed from the machine!"
+# Remove mysql user and group
+sudo userdel mysql -f
+sudo groupdel mysql -f
+
+echo "mysql user and group"
+
+echo -e "\nCongratulation!"
+echo "The Mysql Service Was Successfully Removed From The Machine!"
