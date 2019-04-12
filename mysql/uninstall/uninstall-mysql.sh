@@ -65,7 +65,5 @@ done
 sudo userdel mysql -f
 sudo groupdel mysql
 
-echo "mysql user and group"
-
 echo -e "\nCongratulation!"
 echo "The Mysql Service Was Successfully Removed From The Machine!"
