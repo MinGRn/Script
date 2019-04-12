@@ -2,6 +2,13 @@
 #
 # MySQL Uninstall Script.
 #
+# You can get and run the script following command:
+#
+# Usage:
+#   wget -qO- https://raw.githubusercontent.com/MinGRn/Script/master/mysql/uninstall/uninstall-mysql.sh | bash
+#     or
+#   curl -fsSL https://raw.githubusercontent.com/MinGRn/Script/master/mysql/uninstall/uninstall-mysql.sh | bash
+#
 # The Script will uninstall Mysql-Related Dependencles, Condifguration
 # And data. And it's not recoverable!
 #
@@ -9,7 +16,6 @@
 #
 # So,Make sure all relevant content is deprecated before executing the script!
 #
-
 
 # Find MySQL process pid and kill it by -9 
 
@@ -57,7 +63,7 @@ done
 
 # Remove mysql user and group
 sudo userdel mysql -f
-sudo groupdel mysql -f
+sudo groupdel mysql
 
 echo "mysql user and group"
 
