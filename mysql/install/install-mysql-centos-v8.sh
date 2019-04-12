@@ -1,4 +1,20 @@
 #!/bin/sh
+#
+# MySQL Install Script. And The script Is Only Use For CentOS.
+#
+# You Can Get And Run The Script Following Command:
+#
+# Usage:
+#   wget -qO- https://raw.githubusercontent.com/MinGRn/Script/master/mysql/install/install-mysql-centos-v8.sh | bash
+#     or
+#   curl -fsSL https://raw.githubusercontent.com/MinGRn/Script/master/mysql/install/install-mysql-centos-v8.sh | bash
+#
+# The Script will uninstall Mysql-Related Dependencles, Condifguration And data Before Install it. And it's not recoverable!
+#
+# In addition, mysql users and groups will also be removed!
+#
+# So,Make sure all relevant content is deprecated before executing the script!
+#
 
 # Install wget util and yum util
 sudo yum install -y wget \ 
