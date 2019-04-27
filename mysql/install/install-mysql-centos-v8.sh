@@ -21,7 +21,7 @@ sudo yum install -y wget \
      yum install -y yum-utils
 
 # uninstall if you have already installed it.
-sudo wget -qO- https://raw.githubusercontent.com/MinGRn/Script/master/mysql/uninstall/uninstall-mysql.sh | bash
+sudo wget -qO- https://raw.githubusercontent.com/MinGRn/shell-script/master/mysql/uninstall/uninstall-mysql.sh | bash
 
 # obtain mysql rpm package
 sudo wget https://dev.mysql.com/get/mysql80-community-release-el7-2.noarch.rpm
