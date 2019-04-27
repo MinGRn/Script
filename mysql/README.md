@@ -274,15 +274,21 @@ mysql> CREATE USER 'NewUser'@'localhost' IDENTIFIED BY 'NewUserPassword';
 mysql> CREATE DATABASE NewDatabaseName;
 ```
 
-- Grant all privileges on `NewDatabaseName` database to the `NewUser` user Use Following Command:
+- Grant **all privileges on `NewDatabaseName` database** to the `NewUser` user Use Following Command:
 
 ```
 mysql> RANT ALL PRIVILEGES ON NewDatabaseName.* TO 'NewUser'@'localhost';
 ```
 
+- Grant **all databases privileges** to the `NewUser` user Use Following Command:
+
+```
+mysql> RANT ALL PRIVILEGES ON '%' TO 'NewUser'@'localhost';
+```
+
 **Not**
 
-If you want a user to be able to log in to mysql remotely, You need set the Host with `%`:
+If you want a user to be able to login to mysql remotely, You need set the Host with `%`:
 
 ```
 mysql> show databases;
