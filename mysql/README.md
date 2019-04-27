@@ -196,7 +196,7 @@ This installs the package for the MySQL server, as well as other required packag
 
 # Starting the MySQL Server
 
-Start the MySQL server with the following command:
+- Start the MySQL server with the following command:
 
 ```
 # sudo service mysqld start
@@ -208,7 +208,7 @@ For EL7-based platforms, this is the preferred command:
 # sudo systemctl start mysqld.service
 ```
 
-You can check the status of the MySQL server with the following command:
+- You can check the status of the MySQL server with the following command:
 
 ```
 # sudo service mysqld status
@@ -220,7 +220,7 @@ For EL7-based platforms, this is the preferred command:
 # sudo systemctl status mysqld.service
 ```
 
-You can make it automate enable when reboot.
+- You can make it automate enable when reboot.
 
 ```
 # sudo service mysqld enable
