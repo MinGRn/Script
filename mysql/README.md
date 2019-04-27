@@ -20,14 +20,14 @@ First, add the MySQL Yum repository to your system's repository list. Follow the
 
 - Install the downloaded release package with the following command, replacing *platform-and-version-specific-package-name* with the name of the downloaded package:
 
-```shell
-shell> sudo rpm -iUvh platform-and-version-specific-package-name.rpm
+```
+# sudo rpm -iUvh platform-and-version-specific-package-name.rpm
 ```
 
 For example, for version **n** of the package for EL6-based systems, the command is:
 
-```shell
-shell> sudo rpm -Uvh mysql80-community-release-el6-n.noarch.rpm
+```
+# sudo rpm -iUvh mysql80-community-release-el6-n.noarch.rpm
 ```
 
 > **Note**
@@ -44,8 +44,8 @@ https://dev.mysql.com/get/mysql80-community-release-el7-2.noarch.rpm
 
 You can get it by the following command:
 
-```shell
-shell> sudo wget https://dev.mysql.com/get/mysql80-community-release-el7-2.noarch.rpm
+```
+# sudo wget https://dev.mysql.com/get/mysql80-community-release-el7-2.noarch.rpm
 ```
 
 The Latest MySQL Yum repository includes the latest versions of:
@@ -65,3 +65,269 @@ The Latest MySQL Yum repository includes the latest versions of:
 - MySQL Connector/Python
 
 So, you can install mysql 5.0+ as well. But It will install MySQL 8.0 by default.
+
+# Selecting a Release Series
+
+When using the MySQL Yum repository, the latest GA release of MySQL is selected for installation by default. If this is what you want, you can skip to the next step, [Installing MySQL with Yum](#Installing MySQL).
+
+Within the MySQL Yum repository (https://repo.mysql.com/yum/), different release series of the MySQL Community Server are hosted in different subrepositories. The subrepository for the latest GA series (currently MySQL 8.0) is enabled by default, and the subrepositories for all other series (for example, the MySQL 5.7 series) are disabled by default. Use this command to see all the subrepositories in the MySQL Yum repository, and see which of them are enabled or disabled (for dnf-enabled systems, replace **yum** in the command with **dnf**):
+
+```
+# yum repolist all | grep mysql
+```
+
+e.g:
+
+```
+# yum repolist all | grep mysql
+
+mysql-cluster-7.5-community/x86_64 MySQL Cluster 7.5 Community      禁用
+mysql-cluster-7.5-community-source MySQL Cluster 7.5 Community - So 禁用
+mysql-cluster-7.6-community/x86_64 MySQL Cluster 7.6 Community      禁用
+mysql-cluster-7.6-community-source MySQL Cluster 7.6 Community - So 禁用
+mysql-connectors-community/x86_64  MySQL Connectors Community       启用:    105
+mysql-connectors-community-source  MySQL Connectors Community - Sou 禁用
+mysql-tools-community/x86_64       MySQL Tools Community            启用:     89
+mysql-tools-community-source       MySQL Tools Community - Source   禁用
+mysql-tools-preview/x86_64         MySQL Tools Preview              禁用
+mysql-tools-preview-source         MySQL Tools Preview - Source     禁用
+mysql55-community/x86_64           MySQL 5.5 Community Server       禁用
+mysql55-community-source           MySQL 5.5 Community Server - Sou 禁用
+mysql56-community/x86_64           MySQL 5.6 Community Server       禁用
+mysql56-community-source           MySQL 5.6 Community Server - Sou 禁用
+mysql57-community/x86_64           MySQL 5.7 Community Server       禁用
+mysql57-community-source           MySQL 5.7 Community Server - Sou 禁用
+mysql80-community/x86_64           MySQL 8.0 Community Server       启用:     99  ==> The Latest Version Is Enable By Default
+mysql80-community-source           MySQL 8.0 Community Server - Sou 禁用
+```
+
+To install the latest release from the latest GA series, no configuration is needed. To install the latest release from a specific series other than the latest GA series, disable the subrepository for the latest GA series and enable the subrepository for the specific series before running the installation command. If your platform supports the **yum-config-manager** or **dnf config-manager** command, you can do that by issuing, for example, the following commands, which disable the subrepository for the 8.0 series and enable the one for the 5.7 series; for platforms that are not dnf-enabled:
+
+```
+# sudo yum-config-manager --disable mysql80-community
+# sudo yum-config-manager --enable mysql57-community
+```
+
+For dnf-enabled platforms:
+
+```
+# sudo dnf config-manager --disable mysql80-community
+# sudo dnf config-manager --enable mysql57-community
+```
+
+Besides using **yum-config-manager** or the **dnf config-manager command**, you can also select a series by editing manually the `/etc/yum.repos.d/mysql-community.repo` file. This is a typical entry for a release series' subrepository in the file:
+
+```
+# cat /etc/yum.repos.d/mysql-community.repo 
+
+[mysql55-community]
+name=MySQL 5.5 Community Server
+baseurl=http://repo.mysql.com/yum/mysql-5.5-community/el/7/$basearch/
+enabled=0
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-mysql
+
+[mysql56-community]
+name=MySQL 5.6 Community Server
+baseurl=http://repo.mysql.com/yum/mysql-5.6-community/el/7/$basearch/
+enabled=0
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-mysql
+
+# Enable to use MySQL 5.7
+[mysql57-community]
+name=MySQL 5.7 Community Server
+baseurl=http://repo.mysql.com/yum/mysql-5.7-community/el/7/$basearch/
+enabled=0
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-mysql
+
+[mysql80-community]
+name=MySQL 8.0 Community Server
+baseurl=http://repo.mysql.com/yum/mysql-8.0-community/el/7/$basearch/
+enabled=1
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-mysql
+
+......
+```
+
+Find the entry for the subrepository you want to configure, and edit the `enabled` option. Specify `enabled=0` to **disable** a subrepository, or `enabled=1` to **enable** a subrepository. For example, to install MySQL 5.7, make sure you have `enabled=0` for the above subrepository entry for MySQL 8.0, and have `enabled=1` for the entry for the 5.7 series:
+
+
+```
+# Enable to use MySQL 5.7
+[mysql57-community]
+name=MySQL 5.7 Community Server
+baseurl=http://repo.mysql.com/yum/mysql-5.7-community/el/7/$basearch/
+enabled=1  ==> enable
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-mysql
+
+[mysql80-community]
+name=MySQL 8.0 Community Server
+baseurl=http://repo.mysql.com/yum/mysql-8.0-community/el/7/$basearch/
+enabled=0. ==> disable
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-mysql
+```
+
+You should only enable subrepository for one release series at any time. When subrepositories for more than one release series are enabled, the latest series will be used by Yum.
+
+Verify that the correct subrepositories have been enabled and disabled by running the following command and checking its output (for dnf-enabled systems, replace **yum** in the command with **dnf**):
+
+```
+# yum repolist enabled | grep mysql
+
+mysql-connectors-community/x86_64 MySQL Connectors Community                 105
+mysql-tools-community/x86_64      MySQL Tools Community                       89
+mysql57-community/x86_64          MySQL 5.7 Community Server                 347.  ==> mysql 5.7 is enabled
+```
+
+# Installing MySQL
+
+Install MySQL by the following command (for dnf-enabled systems, replace **yum** in the command with **dnf**):
+
+```
+# sudo yum install -y mysql-community-server
+```
+
+This installs the package for the MySQL server, as well as other required packages.
+
+# Starting the MySQL Server
+
+Start the MySQL server with the following command:
+
+```
+# sudo service mysqld start
+```
+
+For EL7-based platforms, this is the preferred command:
+
+```
+# sudo systemctl start mysqld.service
+```
+
+You can check the status of the MySQL server with the following command:
+
+```
+# sudo service mysqld status
+```
+
+For EL7-based platforms, this is the preferred command:
+
+```
+# sudo systemctl status mysqld.service
+```
+
+You can make it automate enable when reboot.
+
+```
+# sudo service mysqld enable
+```
+
+For EL7-based platforms, this is the preferred command:
+
+```
+# sudo systemctl enable mysqld.service
+```
+
+Now, a superuser account `'root'@'localhost'` is created. A password for the superuser is set and stored in the error log file. To reveal it, use the following command:
+
+```
+# sudo grep 'temporary password' /var/log/mysqld.log
+```
+
+# Securing the MySQL Installation(for MySQL 5.6 only)
+
+The program `mysql_secure_installation` allows you to perform important operations like setting the root password, removing anonymous users, and so on. Always run it to secure your MySQL 5.6 installation::
+
+```
+# mysql_secure_installation
+```
+
+It is important to remember the root password you set. See [mysql_secure_installation — Improve MySQL Installation Security](https://dev.mysql.com/doc/refman/8.0/en/mysql-secure-installation.html) for details.
+
+Do not run `mysql_secure_installation` after an installation of MySQL 5.7 or higher, as the function of the program **has already been performed by the Yum repository installation**.
+
+# Login And Setting
+
+```
+# mysql -uroot -p
+```
+
+- Update Root User Password Use Following Command:
+
+```
+mysql> ALTER USER 'root'@'localhost' IDENTIFIED BY 'MyNewPass4!';
+```
+
+- Create A New User Use Following Command:
+
+```
+mysql> CREATE USER 'NewUser'@'localhost' IDENTIFIED BY 'NewUserPassword';
+```
+
+- Create A New Databases Use Following Command:
+
+```
+mysql> CREATE DATABASE NewDatabaseName;
+```
+
+- Grant all privileges on `NewDatabaseName` database to the `NewUser` user Use Following Command:
+
+```
+mysql> RANT ALL PRIVILEGES ON NewDatabaseName.* TO 'NewUser'@'localhost';
+```
+
+**Not**
+
+If you want a user to be able to log in to mysql remotely, You need set the Host with `%`:
+
+```
+mysql> show databases;
+
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| mysql              |
+| performance_schema |
+| sys                |
++--------------------+
+
+
+mysql> use mysql;
+
+mysql> select user,host from user;
++------------------+-----------+
+| user             | host      |
++------------------+-----------+
+| mysql.infoschema | localhost |
+| mysql.session    | localhost |
+| mysql.sys        | localhost |
+| root             | localhost |
++------------------+-----------+
+```
+
+Now, Update root user, and set host is `%`;
+
+```
+mysql> update user set host='%' where user='root' and host='localhost';
+mysql> flush privileges;
+```
+
+Now, You can login mysql server use root user by remote host:
+
+```
+mysql> select user,host from user;
+
++------------------+-----------+
+| user             | host      |
++------------------+-----------+
+| root             | %         |
+| mysql.infoschema | localhost |
+| mysql.session    | localhost |
+| mysql.sys        | localhost |
++------------------+-----------+
+```

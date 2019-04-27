@@ -5,9 +5,9 @@
 # You Can Get And Run The Script Following Command:
 #
 # Usage:
-#   wget -qO- https://raw.githubusercontent.com/MinGRn/Script/master/mysql/install/install-mysql-centos-v8.sh | bash
+#   wget -qO- https://raw.githubusercontent.com/MinGRn/shell-script/master/mysql/install/install-mysql-centos-v8.sh | bash
 #     or
-#   curl -fsSL https://raw.githubusercontent.com/MinGRn/Script/master/mysql/install/install-mysql-centos-v8.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/MinGRn/shell-script/master/mysql/install/install-mysql-centos-v8.sh | bash
 #
 # The Script will uninstall Mysql-Related Dependencles, Condifguration And data Before Install it. And it's not recoverable!
 #
@@ -102,7 +102,7 @@ sudo systemctl start mysqld.service
 #
 #  sudo systemctl status mysqld.service
 
-sudo systemctl status mysqld.service
+# sudo systemctl status mysqld.service
 
 # The first time the service is started is when a temporary root user password is created.
 # To reveal it, use the following command:
