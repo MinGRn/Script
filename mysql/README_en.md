@@ -68,7 +68,7 @@ So, you can install mysql 5.0+ as well. But It will install MySQL 8.0 by default
 
 # Selecting a Release Series
 
-When using the MySQL Yum repository, the latest GA release of MySQL is selected for installation by default. If this is what you want, you can skip to the next step, [Installing MySQL with Yum](#Installing MySQL).
+When using the MySQL Yum repository, the latest GA release of MySQL is selected for installation by default. If this is what you want, you can skip to the next step, [Installing MySQL with Yum]().
 
 Within the MySQL Yum repository (https://repo.mysql.com/yum/), different release series of the MySQL Community Server are hosted in different subrepositories. The subrepository for the latest GA series (currently MySQL 8.0) is enabled by default, and the subrepositories for all other series (for example, the MySQL 5.7 series) are disabled by default. Use this command to see all the subrepositories in the MySQL Yum repository, and see which of them are enabled or disabled (for dnf-enabled systems, replace **yum** in the command with **dnf**):
 
@@ -167,7 +167,7 @@ gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-mysql
 [mysql80-community]
 name=MySQL 8.0 Community Server
 baseurl=http://repo.mysql.com/yum/mysql-8.0-community/el/7/$basearch/
-enabled=0. ==> disable
+enabled=0  ==> disable
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-mysql
 ```
