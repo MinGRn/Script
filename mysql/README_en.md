@@ -268,10 +268,10 @@ Do not run `mysql_secure_installation` after an installation of MySQL 5.7 or hig
 # mysql -uroot -p
 ```
 
-### Update Root User Password Use Following Command:
+- **Update Root User Password Use Following Command:**
 
 ```
-mysql> ALTER USER 'root'@'localhost' IDENTIFIED BY 'MyNewPass4!';
+mysql> ALTER USER 'root'@'localhost' IDENTIFIED BY 'MyNewPass';
 ```
 
 **Your password does not satisfy the current policy requirements ?**
@@ -339,25 +339,25 @@ s
   - `2/STRONG:` Validates length, number, case, special character, dictionary file
 
 
-#### Create A New User Use Following Command:
+- **Create A New User Use Following Command:**
 
 ```
 mysql> CREATE USER 'NewUser'@'localhost' IDENTIFIED BY 'NewUserPassword';
 ```
 
-#### Create A New Databases Use Following Command:
+- **Create A New Databases Use Following Command:**
 
 ```
 mysql> CREATE DATABASE NewDatabaseName;
 ```
 
-#### Grant **all privileges on `NewDatabaseName` database** to the `NewUser` user Use Following Command:
+- **Grant `all privileges` on `NewDatabaseName` database to the `NewUser` user Use Following Command:**
 
 ```
 mysql> RANT ALL PRIVILEGES ON NewDatabaseName.* TO 'NewUser'@'localhost';
 ```
 
-#### Grant **all databases privileges** to the `NewUser` user Use Following Command:
+- **Grant `all databases privileges` to the `NewUser` user Use Following Command:**
 
 ```
 mysql> RANT ALL PRIVILEGES ON '%' TO 'NewUser'@'localhost';
