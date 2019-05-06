@@ -416,5 +416,3 @@ mysql> select user,host from user;
 ```
 
 [![Demo video](https://asciinema.org/a/244660.svg)](https://asciinema.org/a/244660)
-
-<iframe src="./mysql-install.html" width="700px" height="500px" frameborder="0" scrolling="no"> </iframe>
