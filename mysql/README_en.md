@@ -10,6 +10,18 @@ The MySQL Yum repository supports the following Linux distributions:
 
 - Fedora 28 and 29
 
+# Uninstall Old Version
+
+If you have installed it before, uninstall it first!
+
+You can just run following command:
+
+```
+wget -qO- https://raw.githubusercontent.com/MinGRn/shell-script/master/mysql/uninstall/uninstall-mysql.sh | bash
+  or
+curl -fsSL https://raw.githubusercontent.com/MinGRn/shell-script/master/mysql/uninstall/uninstall-mysql.sh | bash
+```
+
 # Adding the MySQL Yum Repository
 
 First, add the MySQL Yum repository to your system's repository list. Follow these steps:
@@ -76,7 +88,7 @@ Within the MySQL Yum repository (https://repo.mysql.com/yum/), different release
 # yum repolist all | grep mysql
 ```
 
-e.g:
+e.g.:
 
 ```
 # yum repolist all | grep mysql
@@ -256,16 +268,20 @@ Do not run `mysql_secure_installation` after an installation of MySQL 5.7 or hig
 # mysql -uroot -p
 ```
 
-- Update Root User Password Use Following Command:
+### Update Root User Password Use Following Command:
 
 ```
 mysql> ALTER USER 'root'@'localhost' IDENTIFIED BY 'MyNewPass4!';
 ```
 
-> Your password does not satisfy the current policy requirements ?
+**Your password does not satisfy the current policy requirements ?**
+
+> **Note:** If you fire time login, you need update password first, exit mysql client and run `mysql_secure_installation` command.
 >
-> When you modify or create a user password when prompted this information, you can view `validate_password` to modify the corresponding authentication information :
->
+> **You can check out the demo video below to see how mysql is installed！**
+
+When you modify or create a user password when prompted this information, you can view `validate_password` to modify the corresponding authentication information :
+
 ```
 mysql> SHOW VARIABLES LIKE 'validate_password%';
 
@@ -281,9 +297,9 @@ mysql> SHOW VARIABLES LIKE 'validate_password%';
 | validate_password_special_char_count | 1      |
 +--------------------------------------+--------+
 ```
->
-> Modify the validation information that you want to modify, Here is an example:
->
+
+Modify the validation information that you want to modify, Here is an example:
+
 ```
 mysql> set global validate_password_policy=LOW;
 mysql> set global validate_password_length=6;
@@ -301,51 +317,47 @@ mysql> SHOW VARIABLES LIKE 'validate_password%';
 | validate_password_special_char_count | 1     |
 +--------------------------------------+-------+
 ```
->
-> Now, You can set a simple password such as `admin123`
->
->
+
+Now, You can set a simple password such as `admin123`
+
+
 **Extension：**
 
-1）`validate_password_length`  固定密码的总长度；
++ `validate_password_length:` set password length
 
-2）`validate_password_dictionary_file` 指定密码验证的文件路径；
++ `validate_password_dictionary_file:` Specify the file path for password validation
 
-3）`validate_password_mixed_case_count`  整个密码中至少要包含大/小写字母的总个数；
++ `validate_password_mixed_case_count: `The entire password should contain at least the total number of upper/lower case letters
 
-4）`validate_password_number_count`  整个密码中至少要包含阿拉伯数字的个数；
++ `validate_password_number_count:` The whole password should contain at least the number of Arabic numerals
 
-5）`validate_password_policy` 指定密码的强度验证等级，默认为 MEDIUM；
++ `validate_password_policy` Specifies the strength verification level for the password, default is `MEDIUM`
+s
++ `validate_password_policy`:
+  - `0/LOW:` Verify only the length
+  - `1/MEDIUM:` Verify length, number, case, and special characters
+  - `2/STRONG:` Validates length, number, case, special character, dictionary file
 
-`validate_password_policy`：
 
-0/LOW：只验证长度；
-
-1/MEDIUM：验证长度、数字、大小写、特殊字符；
-
-2/STRONG：验证长度、数字、大小写、特殊字符、字典文件；
-
-`validate_password_special_char_count`： 整个密码中至少要包含特殊字符的个数；
-
-- Create A New User Use Following Command:
+### Create A New User Use Following Command:
 
 ```
 mysql> CREATE USER 'NewUser'@'localhost' IDENTIFIED BY 'NewUserPassword';
 ```
 
-- Create A New Databases Use Following Command:
+### Create A New Databases Use Following Command:
 
 ```
 mysql> CREATE DATABASE NewDatabaseName;
 ```
 
-- Grant **all privileges on `NewDatabaseName` database** to the `NewUser` user Use Following Command:
+### Grant **all privileges on `NewDatabaseName` database** to the `NewUser` user Use Following Command:
 
 ```
 mysql> RANT ALL PRIVILEGES ON NewDatabaseName.* TO 'NewUser'@'localhost';
 ```
 
-- Grant **all databases privileges** to the `NewUser` user Use Following Command:
+### Grant **all databases privileges** to the `NewUser` user Use Following Command:
 
 ```
 mysql> RANT ALL PRIVILEGES ON '%' TO 'NewUser'@'localhost';
@@ -402,3 +414,5 @@ mysql> select user,host from user;
 | mysql.sys        | localhost |
 +------------------+-----------+
 ```
+
+[![Demo video](https://asciinema.org/a/244660.svg)](https://asciinema.org/a/244660)
