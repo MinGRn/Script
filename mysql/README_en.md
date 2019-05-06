@@ -307,19 +307,25 @@ mysql> SHOW VARIABLES LIKE 'validate_password%';
 >
 **Extension：**
 
-1）validate_password_length  固定密码的总长度；
-2）validate_password_dictionary_file 指定密码验证的文件路径；
-3）validate_password_mixed_case_count  整个密码中至少要包含大/小写字母的总个数；
-4）validate_password_number_count  整个密码中至少要包含阿拉伯数字的个数；
-5）validate_password_policy 指定密码的强度验证等级，默认为 MEDIUM；
+1）`validate_password_length`  固定密码的总长度；
 
-validate_password_policy：
+2）`validate_password_dictionary_file` 指定密码验证的文件路径；
+
+3）`validate_password_mixed_case_count`  整个密码中至少要包含大/小写字母的总个数；
+
+4）`validate_password_number_count`  整个密码中至少要包含阿拉伯数字的个数；
+
+5）`validate_password_policy` 指定密码的强度验证等级，默认为 MEDIUM；
+
+`validate_password_policy`：
 
 0/LOW：只验证长度；
+
 1/MEDIUM：验证长度、数字、大小写、特殊字符；
+
 2/STRONG：验证长度、数字、大小写、特殊字符、字典文件；
 
-validate_password_special_char_count： 整个密码中至少要包含特殊字符的个数；
+`validate_password_special_char_count`： 整个密码中至少要包含特殊字符的个数；
 
 - Create A New User Use Following Command:
 
