@@ -262,6 +262,48 @@ Do not run `mysql_secure_installation` after an installation of MySQL 5.7 or hig
 mysql> ALTER USER 'root'@'localhost' IDENTIFIED BY 'MyNewPass4!';
 ```
 
+> Your password does not satisfy the current policy requirements ?
+>
+> When you modify or create a user password when prompted this information, you can view `validate_password` to modify the corresponding authentication information :
+>
+```
+mysql> SHOW VARIABLES LIKE 'validate_password%';
+
++--------------------------------------+--------+
+| Variable_name                        | Value  |
++--------------------------------------+--------+
+| validate_password_check_user_name    | OFF    |
+| validate_password_dictionary_file    |        |
+| validate_password_length             | 8      |  ==> length verify
+| validate_password_mixed_case_count   | 1      |
+| validate_password_number_count       | 1      |
+| validate_password_policy             | MEDIUM |  ==> update to low
+| validate_password_special_char_count | 1      |
++--------------------------------------+--------+
+```
+>
+> Modify the validation information that you want to modify, Here is an example:
+>
+```
+mysql> set global validate_password_policy=LOW;
+mysql> set global validate_password_length=6;
+
+mysql> SHOW VARIABLES LIKE 'validate_password%';
++--------------------------------------+-------+
+| Variable_name                        | Value |
++--------------------------------------+-------+
+| validate_password_check_user_name    | OFF   |
+| validate_password_dictionary_file    |       |
+| validate_password_length             | 6     |
+| validate_password_mixed_case_count   | 1     |
+| validate_password_number_count       | 1     |
+| validate_password_policy             | LOW   |
+| validate_password_special_char_count | 1     |
++--------------------------------------+-------+
+```
+>
+> Now, You can set a simple password such as `admin123`
+
 - Create A New User Use Following Command:
 
 ```
