@@ -416,3 +416,5 @@ mysql> select user,host from user;
 ```
 
 [![Demo video](https://asciinema.org/a/244660.svg)](https://asciinema.org/a/244660)
+
+<script id="asciicast-244660" src="https://asciinema.org/a/244660.js" async></script>
