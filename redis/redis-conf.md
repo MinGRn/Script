@@ -128,3 +128,91 @@ config rewrite
 
 # 配置
 
+## bind
+
+`bind` 配置是用于指定绑定到机器的具体网卡的 IP。如果不进行指定，则会暴露给所有的网卡接口。
+
+不太好理解，来用一个栗子说明一下。在 `Linux` 中可以输入 `ifconfig` 指令进行查看 IP 信息，下面使一个示例：
+
+```
+docker0: flags=4099<UP,BROADCAST,MULTICAST>  mtu 1500
+        inet 172.17.0.1  netmask 255.255.0.0  broadcast 172.17.255.255
+        ether 02:42:7d:a8:fd:76  txqueuelen 0  (Ethernet)
+        RX packets 0  bytes 0 (0.0 B)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 0  bytes 0 (0.0 B)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        inet 192.168.1.10  netmask 255.255.255.0  broadcast 192.168.1.255
+        inet6 fe80::3529:13f4:38ca:5506  prefixlen 64  scopeid 0x20<link>
+        ether 00:15:5d:f6:c1:01  txqueuelen 1000  (Ethernet)
+        RX packets 111625  bytes 11247615 (10.7 MiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 95825  bytes 10664836 (10.1 MiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+lo: flags=73<UP,LOOPBACK,RUNNING>  mtu 65536
+        inet 127.0.0.1  netmask 255.0.0.0
+        inet6 ::1  prefixlen 128  scopeid 0x10<host>
+        loop  txqueuelen 1000  (Local Loopback)
+        RX packets 1156085  bytes 905087201 (863.1 MiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 1156085  bytes 905087201 (863.1 MiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+```
+
+从上面的日志中可以看到，该主机有三个网卡，每一个网卡都包括一个 IPV4 和 IPV6。`bind` 的意思就是进行指定绑定到的具体 IP。如绑定到的 IP 是
+`127.0.0.1`，那么在与 `redis` 通信时只能通过该 IP 进行通信。反过来，如果不进行绑定 IP，那么上面的六个 IP 都能跟 `redis` 进行通信。可
+以进行测试一下，如果绑定一个不存在的 IP 则会启动失败。
+
+如，这里修改 `bind` 配置如下：
+
+```
+bind 10.0.0.1
+```
+
+`10.0.0.1` 是本机不存在的一个 IP，现在进行启动 `redis` 时会输出如下日志信息：
+
+```
+103918:C 19 May 22:31:38.964 # oO0OoO0OoO0Oo Redis is starting oO0OoO0OoO0Oo
+103918:C 19 May 22:31:38.964 # Redis version=4.0.2, bits=64, commit=00000000, modified=0, pid=103918, just started
+103918:C 19 May 22:31:38.964 # Configuration loaded
+103918:M 19 May 22:31:38.965 * Increased maximum number of open files to 10032 (it was originally set to 1024).
+103918:M 19 May 22:31:38.965 # Creating Server TCP listening socket 10.0.0.1:6379: bind: Cannot assign requested address
+```
+
+其中最后一行日志说的很清楚，因此在使用 `bind` 之前要理解绑定的含义。
+
+另外，`bind` 可以绑定到多个 IP，如下示例：
+
+```
+bind 127.0.0.1
+bind 192.168.1.10
+```
+
+<u>下面是原文：<u>
+
+```
+By default, if no "bind" configuration directive is specified, Redis listens
+for connections from all the network interfaces available on the server.
+It is possible to listen to just one or multiple selected interfaces using
+the "bind" configuration directive, followed by one or more IP addresses.
+
+Examples:
+
+bind 192.168.1.100 10.0.0.1
+bind 127.0.0.1 ::1
+
+~~~ WARNING ~~~ If the computer running Redis is directly exposed to the
+internet, binding to all the interfaces is dangerous and will expose the
+instance to everybody on the internet. So by default we uncomment the
+following bind directive, that will force Redis to listen only into
+the IPv4 lookback interface address (this means Redis will be able to
+accept connections only from clients running into the same computer it
+is running).
+
+IF YOU ARE SURE YOU WANT YOUR INSTANCE TO LISTEN TO ALL THE INTERFACES
+JUST COMMENT THE FOLLOWING LINE.
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+```
