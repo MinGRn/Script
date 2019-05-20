@@ -249,6 +249,15 @@ port 6380
 
 另外，如果指定的端口为 0 那么 redis 将不会监听 TCP 端口。
 
+## databases
+
+数据库数量，默认是 16，你可以指定任意个。在使用时可以使用 `select <dbid>` 进行选择具体使用的数据库。
+注意，在内存中并没有实际意义，仅仅是逻辑上的意义。笔者推荐设置 1 个即可：
+
+```
+databases 1
+```
+
 ## include
 
 一般，我们在启动 redis 服务的时候可以指定一个 `redis.conf` 配置文件。不过，如果你想要在一个机器中启动多个 `redis` 实例
@@ -285,4 +294,146 @@ include /path/redis-2.conf
 这两个配置文件中保存相同的配置，则 `redis-2` 中的配置生效。
 
 需要有一点说明就是 `include` 引用的配置文件不会被 `config rewrite` 命令重写。因此，如果你希望某个配置不会被重写那么建议你讲该配置放入 `include` 中。
+
+## timeout
+
+客户端连接超时时间，该配置用于表示当 `redis-cli` 客户端连接 `redis-server` 某段时间后一直无法取得连接就会取消连接（单位是秒）。0 表示取消超时时间，即处 `redis-cli` 永远不会超时，一直不断的进行尝试连接 `redis-server`。
+
+如下，设置客户端连接超时时间为 3 秒，如果其他客户点尝试连接 `redis-server` 3 秒后依然无法取得连接就会自动取消连接：
+
+```
+127.0.0.1:6379> config get timeout
+1) "timeout"
+2) "3
+```
+
+## maxclients
+
+设置 `redis-server` 允许的最大客户端连接数量，默认值是 10000。如果 `redis-cli` 连接超过这个限制就会抛出 `max number of clients reached`
+异常。
+
+示例，启动 `redis-server` 时在 `redis.conf` 文件中指定 `redis-cli` 最大连接数为 1。使用一个客户端连接后再使用另一个客户端连接并列举所有 `key`：
+
+```
+# 客户端1
+127.0.0.1:6379> config get maxclients
+1) "maxclients"
+2) "1"
+
+# 客户端2
+127.0.0.1:6379> keys *
+(error) ERR max number of clients reached
+```
+
+## daemonize
+
+设置后台启动，在启动 `redis-server` 时如果在配置文件中设置 `daemonize yes` 那么 `redis-server` 会在后台运行。反之，设置 `no` 将会在控制台中
+输出相关日志信息。当然，如果退出日志则 `redis-server` 进程也会退出。
+
+推荐使用后台模式启动：
+
+```
+daemonize yes
+```
+
+## tcp-keepalive
+
+TCP 连接有长、短连接。短连接在数据包发送完成后就会自动断开。长连接在发包完成后会在一定时间内保持活性，即通常说的 keepalive（存活定时器）。
+`tcp-keepalive` 活性单位为秒，默认也是推荐值是 `300s`
+
+```
+tcp-keepalive 300
+```
+
+## pidfile
+
+用于存储 `redis-server` 进程 PID 的文件，如果指定该文件在服务启动时会将 PID 写入该文件，退出进程时会自动删除。
+
+如果启动 `redis-server` 时采用的是非守护进程（即非后台运行模式）： `daemonize no`。即使指定的 `pidfile` 也不会创建并将 `PID` 写入该文件。
+该配置只会后台运行模式生效。
+
+另外，如果不进行明确的指定一个 `pidfile` 文件。 `redis` 会采用默认的文件： `/var/run/redis.pid`。不过推荐手动创建一个 `pidfile` 文件，这是因为如果 `redis` 没有某目录的写权限就会导致启动失败。
+
+```
+pidfile "/var/run/redis_6379.pid"
+```
+
+## loglevel
+
+日志级别，可以从下面的表格中指定一个：
+
+| 级别 | 说明 |
+|:---:|:----:|
+|debug|会输出大量日志信息，对开发和测试很有用|
+|verbose|相比较 `debug` 会输出更少的日志|
+|notice|通常用于生产环境（默认）|
+|warning|只会输出一些关键、重要的日志信息|
+
+```
+loglevel notice
+```
+
+## logfile
+
+日志输出文件，可以强制使用 `""` 即空字符串，日志会被发送到 `/dev/null`。推荐指定具体日志文件：
+
+```
+logfile /opt/redis/redis.log
+```
+
+## syslog-enabled
+
+是否启动系统日志输出（`yes` 或 `no`）
+
+```
+# 默认
+syslog-enable no
+```
+
+## syslog-ident
+
+用于指定系统日志标识。
+
+```
+syslog-ident redis
+```
+
+## syslog-facility
+
+指定系统日志工具，必须是 `USER` 或 ` LOCAL0-LOCAL7` 中的值。
+
+```
+# 默认
+syslog-facility local0
+```
+
+## always-show-logo
+
+是否展示 `redis` ASCII art logo（`yes` 或 `no`）。
+
+```
+always-show-logo yes
+```
+
+展示 logo:
+
+```
+                _._                                                  
+           _.-``__ ''-._                                             
+      _.-``    `.  `_.  ''-._           Redis 4.0.2 (00000000/0) 64 bit
+  .-`` .-```.  ```\/    _.,_ ''-._                                   
+ (    '      ,       .-`  | `,    )     Running in standalone mode
+ |`-._`-...-` __...-.``-._|'` _.-'|     Port: 6379
+ |    `-._   `._    /     _.-'    |     PID: 34546
+  `-._    `-._  `-./  _.-'    _.-'                                   
+ |`-._`-._    `-.__.-'    _.-'_.-'|                                  
+ |    `-._`-._        _.-'_.-'    |           http://redis.io        
+  `-._    `-._`-.__.-'_.-'    _.-'                                   
+ |`-._`-._    `-.__.-'    _.-'_.-'|                                  
+ |    `-._`-._        _.-'_.-'    |                                  
+  `-._    `-._`-.__.-'_.-'    _.-'                                   
+      `-._    `-.__.-'    _.-'                                       
+          `-._        _.-'                                           
+              `-.__.-'                                               
+```
 
