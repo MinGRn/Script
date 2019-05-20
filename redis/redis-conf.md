@@ -214,5 +214,75 @@ is running).
 
 IF YOU ARE SURE YOU WANT YOUR INSTANCE TO LISTEN TO ALL THE INTERFACES
 JUST COMMENT THE FOLLOWING LINE.
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ```
+
+## protected-mode
+
+该配置是一个安全防护层，如果该配置被打开（值为 `yes`）并且
+
+1. redis 服务没有使用 `bind` 明确指定一个 IP 地址
+2. 没有做密码配置
+
+那么 redis 服务只会接受来自 IPv4 的地址 `127.0.0.1`、IPv6 的地址 `::1` 以及 Unix 的钳子套。
+
+默认情况下该配置是被打开的，如果你想要在没有配置密码认证或没有明确的指定 `bind` 的情况下则可以关闭该配置。
+
+使用示例：
+
+```
+# 开发防护层
+protected-mode yes
+
+# 关闭防护层
+protected-mode no
+```
+
+## port
+
+该配置用于指定端口，默认端口是 `6379`。你可以通过该配置进行修改，如修改为 `6380`:
+
+```
+port 6380
+```
+
+则使用 `redis-cli` 连接时则指定的端口为 `6380`。
+
+另外，如果指定的端口为 0 那么 redis 将不会监听 TCP 端口。
+
+## include
+
+一般，我们在启动 redis 服务的时候可以指定一个 `redis.conf` 配置文件。不过，如果你想要在一个机器中启动多个 `redis` 实例
+并且有大部分的配置是相同的该如何做呢？
+
+拿一个示例来说，有两个 redis 示例 A he B。启动有很大一部分两个示例的配置是相同的，我们就将这个公共的部分提取到一个配置文件中命名为：`redis-common.conf`。
+另外，A 实例有自己单独的一部分配置我们将这部分配置放在 `redis-a.conf` 配置文件中。同样的我们将 B 实例特有的配置放在 `redis-b.conf` 配置文件中。（注意：假
+设这三个配置文件都在 `/opt/redis` 目录下）
+
+现在我想要启动 A 实例该怎么做？
+
+只需要在 `redis-a.conf` 配置文件中引入 `redis-common.conf` 即可。下面是 `redis-a.conf` 文件内容：
+
+```
+...
+include /opt/redis/redis-common.conf
+...
+```
+
+启动 A 实例：
+
+```
+redis-server /opt/redis/redis-a.conf
+```
+
+通过这种方式我们就能简化很大一部分配置。另外，`include` 可以指定多个引用配置。有一点需要注意，如果多个配置文件中包括相同的配置，那么只有最后一行配置生效。
+如：
+
+```
+include /path/redis-1.conf
+include /path/redis-2.conf
+```
+
+这两个配置文件中保存相同的配置，则 `redis-2` 中的配置生效。
+
+需要有一点说明就是 `include` 引用的配置文件不会被 `config rewrite` 命令重写。因此，如果你希望某个配置不会被重写那么建议你讲该配置放入 `include` 中。
+
