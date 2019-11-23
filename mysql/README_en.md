@@ -416,3 +416,272 @@ mysql> select user,host from user;
 ```
 
 [![Demo video](https://asciinema.org/a/244660.svg)](https://asciinema.org/a/244660)
+
+# Migration data directory
+
+YUM 安装方式使用的默认数据存储目录是：`/var/lib/mysql/data`，如果在前面步骤按顺序走完后你会看到该文件夹有类似如下数据文件：
+
+```bash
+$ ls /var/lib/mysql/data
+
+auto.cnf    client-cert.pem  ibdata1      ibtmp1              private_key.pem  server-key.pem
+ca-key.pem  client-key.pem   ib_logfile0  mysql               public_key.pem   sys
+ca.pem      ib_buffer_pool   ib_logfile1  performance_schema  server-cert.pem
+```
+
+在实际应用中，我不不太可能会直接使用的数据存储文件，因为不利于管理。先在就来看看如何修改数据存储目录！
+
+MySQL 的服务启动配置文件通常为 `my.cnf`，并存储在 `/etc` 目录下。但各个版本也可能存储在差异，所以我们要首先看下当前版本配置文件名是什么，存储在哪里。
+
+在命令终端输入 `mysql --help` 查看帮助命令，你会在输出信息中看到有如下一段信息：
+
+```
+Default options are read from the following files in the given order:
+/etc/my.cnf /etc/mysql/my.cnf /usr/etc/my.cnf ~/.my.cnf
+```
+
+这段提示你：当前版本的配置文件名称为 `my.cnf`。按优先级别存储的目录分别是 `/etc`、`/etc/mysql`、`/usr/etc`以及当前用户目录（配置文件名为 `.my.cnf`）。
+
+所以，我们以 `/etc` 为主，将配置文件放置在该目录（通常使用 `yum` 安装完成后该目录下会有一个默认的 `my.cnf` 文件，如果没有则创建一个 `my.cnf` 文件即可）。现在编辑该文件将 `datadir` 数据目录值修改为 `/opt/mysql/data`（注意，编辑时应该使用 `sudo` 超级管理员命令，否则权限为只读权限）。
+
+```bash
+$ sudo vim /etc/my.cnf
+```
+
+修改后的内容如下所示：
+
+```
+# For advice on how to change settings please see
+# http://dev.mysql.com/doc/refman/5.7/en/server-configuration-defaults.html
+
+[mysqld]
+#
+# Remove leading # and set to the amount of RAM for the most important data
+# cache in MySQL. Start at 70% of total RAM for dedicated server, else 10%.
+# innodb_buffer_pool_size = 128M
+#
+# Remove leading # to turn on a very important data integrity option: logging
+# changes to the binary log between backups.
+# log_bin
+#
+# Remove leading # to set options mainly useful for reporting servers.
+# The server defaults are faster for transactions and fast SELECTs.
+# Adjust sizes as needed, experiment to find the optimal values.
+# join_buffer_size = 128M
+# sort_buffer_size = 2M
+# read_rnd_buffer_size = 2M
+datadir=/opt/mysql/data
+socket=/var/lib/mysql/mysql.sock
+
+# Disabling symbolic-links is recommended to prevent assorted security risks
+symbolic-links=0
+
+log-error=/var/log/mysqld.log
+pid-file=/var/run/mysqld/mysqld.pid
+```
+
+注意 `datadir=/opt/mysql/data` 这段就是数据目录的配置。我们应该直接修改数据存储目录，所以该目录下没有任何数据，如果你想继续沿用之前的数据，只需要将之前的数据文件放置在该目录下即可！当前演示需要，不会放置任何数据。另外，先将已存在的 `/var/log/mysqld.log` 日志文件删除，以免影响后续操作！
+
+修改完成后进行保存，现在来看下当前目录的归属用户与权限：
+
+```bash
+$ ll /opt/mysql
+
+drwxr-xr-x. 5 root root  4096 11月 23 13:45 data
+```
+
+所以，我们还需要修改该文件的归属用户权限。`YUM` 命令安装 `MySQL` 通常会创建 `mysql` 用户和 `mysql` 用户组。我们可以分别看下 `/etc` 下的 `passwd` 文件内容和 `group` 内容：
+
+> `/etc` 目录下 `passwd` 文件存储的是用户信息，`group` 文件存储的是用户组信息。
+
+```bash
+$ cat /etc/passwd | grep mysql
+mysql:x:27:27:MySQL Server:/var/lib/mysql:/bin/false
+
+$ cat /etc/group | grep mysql
+mysql:x:27:
+```
+
+所以，我们现在就使用 `chown` 命令将 `/opt/mysql` 文件夹及文件归属给 `mysql` 用户和 `mysql` 用户组：
+
+```bash
+$ chown -R mysql:mysql /opt/mysql
+```
+
+现在再来看下目录权限：
+
+```bash
+$ ll /opt/mysql
+
+drwxr-xr-x. 5 mysql mysql  4096 11月 23 13:45 data
+```
+
+所有权限准备就绪后开始启动 `MySQL` 服务：
+
+```bash
+# 终止 MySQL 服务
+$ systemctl stop mysqld.service
+
+# 启动 MySQL 服务
+$ systemctl start mysqld.service
+```
+
+如果在启动过程中输出如下信息即表示没有启动成功：
+
+```
+Job for mysqld.service failed because the control process exited with error code. See "systemctl status mysqld.service" and "journalctl -xe" for details.
+```
+
+执行命令 `journalctl -xe` 或者直接查看 `/var/log/mysqld.log` 你会看到类似如下的错误信息：
+
+```
+[Warning] Can't create test file /opt/mysql/data/localhost.lower-test
+```
+
+如果出现该信息继续阅读 [Can't create test file xxx.lower-test](#Can't create test file xxx.lower-test) ，如果没有请直接跳过！
+
+## Can't create test file xxx.lower-test
+
+看到该错误信息后，你各种度娘、谷歌、stackoverflow。你会发现，所有的答案都指向 `selinux`。告诉你，需要修改 `/etc/selinux/config` 配置文件，将该文件中的 `SELINUX=enforcing` 修改为 `SELINUX=disabled`，然后 `reboot` 即可！
+
+事实确实如此，那么 `selinux` 到底是什么？这个我们需要先弄明白！
+
+**SELinux是什么?**
+
+SELinux，Security Enhanced Linux 的缩写，也就是安全强化的 Linux，是由美国国家安全局（NSA）联合其他安全机构（比如 SCC 公司）共同开发的，旨在增强传统 Linux 操作系统的安全性，解决传统 Linux 系统中自主访问控制（DAC）系统中的各种权限问题（如 root 权限过高等）。
+
+SELinux 项目在 2000 年以 GPL 协议的形式开源，当 Red Hat 在其 Linux 发行版本中包括了 SELinux 之后，SELinux 才逐步变得流行起来。现在，SELinux 已经被许多组织广泛使用，几乎所有的 Linux  内核 2.6 以上版本，都集成了 SELinux 功能。
+对于 SELinux，初学者可以这么理解，它是部署在 Linux 上用于增强系统安全的功能模块。
+
+我们知道，传统的 Linux 系统中，默认权限是对文件或目录的所有者、所属组和其他人的读、写和执行权限进行控制，这种控制方式称为自主访问控制（DAC）方式；而在 SELinux 中，采用的是强制访问控制（MAC）系统，也就是控制一个进程对具体文件系统上面的文件或目录是否拥有访问权限，而判断进程是否可以访问文件或目录的依据，取决于 SELinux 中设定的很多策略规则。
+
+说到这里，读者有必要详细地了解一下这两个访问控制系统的特点：
+
+- 自主访问控制系统（Discretionary Access Control，DAC）是 Linux 的默认访问控制方式，也就是依据用户的身份和该身份对文件及目录的 rwx 权限来判断是否可以访问。不过，在 DAC 访问控制的实际使用中我们也发现了一些问题：
+  1. root 权限过高，rwx 权限对 root 用户并不生效，一旦 root 用户被窃取或者 root 用户本身的误操作，都是对 Linux 系统的致命威胁。
+  2. Linux 默认权限过于简单，只有所有者、所属组和其他人的身份，权限也只有读、写和执行权限，并不利于权限细分与设定。
+  3. 不合理权限的分配会导致严重后果，比如给系统敏感文件或目录设定 777 权限，或给敏感文件设定特殊权限——SetUID 权限等。
+
+- 强制访问控制（Mandatory Access Control，MAC）是通过 SELinux 的默认策略规则来控制特定的进程对系统的文件资源的访问。也就是说，即使你是 root 用户，但是当你访问文件资源时，如果使用了不正确的进程，那么也是不能访问这个文件资源的。
+
+这样一来，SELinux 控制的就不单单只是用户及权限，还有进程。每个进程能够访问哪个文件资源，以及每个文件资源可以被哪些进程访问，都靠 SELinux 的规则策略来确定。
+
+> 注意，在 SELinux 中，Linux 的默认权限还是有作用的，也就是说，一个用户要能访问一个文件，既要求这个用户的权限符合 rwx 权限，也要求这个用户的进程符合 SELinux 的规定。
+
+不过，系统中有这么多的进程，也有这么多的文件，如果手工来进行分配和指定，那么工作量过大。所以 SELinux 提供了很多的默认策略规则，这些策略规则已经设定得比较完善，我们稍后再来学习如何查看和管理这些策略规则。
+
+为了使读者清楚地了解 SELinux 所扮演的角色，这里举一个例子，假设 apache 上发现了一个漏洞，使得某个远程用户可以访问系统的敏感文件（如 /etc/shadow）。如果我们的 Linux 中启用了 SELinux，那么，因为 apache 服务的进程并不具备访问 /etc/shadow 的权限，所以这个远程用户通过 apache 访问 /etc/shadow文件就会被 SELinux 所阻挡，起到保护 Linux 系统的作用。
+
+以上来源：[SELinux管理](http://c.biancheng.net/view/1147.html)
+
+所以，现在现在禁用 `selinux`。
+
+```bash
+$ cat /etc/selinux/config 
+
+# This file controls the state of SELinux on the system.
+# SELINUX= can take one of these three values:
+#     enforcing - SELinux security policy is enforced.
+#     permissive - SELinux prints warnings instead of enforcing.
+#     disabled - No SELinux policy is loaded.
+SELINUX=enforcing
+# SELINUXTYPE= can take one of three values:
+#     targeted - Targeted processes are protected,
+#     minimum - Modification of targeted policy. Only selected processes are protected. 
+#     mls - Multi Level Security protection.
+SELINUXTYPE=targeted 
+```
+
+说下 SELINUX 三个值的释义：
+
+- `enforcing` 执行保护
+- `permissive` 不执行保护只记录越权访问
+- `disabled` 禁用 selinux
+
+将 SELINUX 修改为 `disabled` 后，重启机器（`reboot`）确实能够启动 MySQL 服务了。接下载就按照之前的步骤获取初始密码接着走先去即可！
+
+但是！如果直接禁用了 `SELINUX`，机器的安全将无法得到保障！所以，我们应该仅仅开放 `/opt/mysql` 目录的权限！先将 `SELINUX` 值修改回 `enforcing`。
+
+Linux 有一个工具：`semanage`，该工具就是用来管理 `selinux` 的，那么 `semanage` 是什么？
+
+1. semanage是一个软件中的一部分，
+2. 可在linux中用命令行的方式使用
+3. 它可以管理SELinux
+
+**SELinux的默认设置**
+
+默认情况下，最小化安装的CentOS，SELinux是开启的。SELinux默认情况下，只允许非root权限用户，使用几个固定端口（包括http端口和其他协议的端口）。
+  
+被默认可以使用的http端口如下：可使用命令 `semanage port -l | grep http_port_t` 查看，结果如下：
+
+```
+http_port_t                    tcp      80, 81, 443, 488, 8008, 8009, 8443, 9000
+pegasus_http_port_t            tcp      5988
+```
+
+看下如下问题：
+
+`yum` 安装的 `nginx`，创建了 `nginx` 用户，来进行系统资源的使用，`nginx` 用户是没有 `root` 权限的。
+
+所以，它无法监听 除了默认可以使用的那些 http 端口，因为SELinux不允许
+
+解决方法：
+
+为了保证安全，SELinux是不能关闭的，所以，只能让SELinux加入通行规则，开放一些端口，让所有用户(当然也可以是指定的用户)能够使用。
+
+所以，我们也应该为 MySQL 服务增加一些同行规则！
+
+先来安装 `semanage`：
+
+我们可以执行如下命令查看该命令被包含在什么软件包中
+
+```bash
+$ yum provides /usr/sbin/semanage
+```
+
+输出信息如下：
+
+```
+已加载插件：fastestmirror
+Loading mirror speeds from cached hostfile
+ * base: mirrors.163.com
+ * extras: mirrors.163.com
+ * updates: mirrors.aliyun.com
+policycoreutils-python-2.5-33.el7.x86_64 : SELinux policy core python utilities
+源    ：base
+匹配来源：
+文件名    ：/usr/sbin/semanage
+
+
+
+policycoreutils-python-2.5-33.el7.x86_64 : SELinux policy core python utilities
+源    ：@base
+匹配来源：
+文件名    ：/usr/sbin/semanage
+```
+
+所以，我们需要安装 `policycoreutils-python` 工具：
+
+```bash
+$ yum install -y policycoreutils-python
+```
+
+安装完成后，执行 `semanage -help` 帮助命令查看如何使用，这里不做具体说明了！现在就来为 MySQL 设置同行规则：
+
+我们的 MySQL 数据目录是 `/opt/mysql`，所以执行命令如下所示：
+
+```bash
+$ sudo semanage fcontext -add --typt mysqld_db_t "/opt/mysql(/.*)?"
+```
+
+执行完成后，继续执行如下命令：
+
+```bash
+$ restorecon -rV /opt/mysql
+```
+
+> restorecon 是什么命令，不做具体科普了，可以查阅一下 SELinux 安全上下文修改（`chcon`、`restorecon`、`semanage`）相关命令！
+
+执行完成后，即可使用 `systemctl start mysqld.service` 了，执行完成后我们需要查看 `/var/log/mysqld.log` 文件查看 MySQL 初始 root 密码，然后登陆修改即可！
+
+至此，YUM 安装方式数据目录就修改完成了！
