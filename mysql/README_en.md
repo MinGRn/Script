@@ -675,7 +675,7 @@ $ yum install -y policycoreutils-python
 我们的 MySQL 数据目录是 `/opt/mysql`，所以执行命令如下所示：
 
 ```bash
-$ sudo semanage fcontext --add --typt mysqld_db_t "/opt/mysql(/.*)?"
+$ sudo semanage fcontext --add --type mysqld_db_t "/opt/mysql(/.*)?"
 ```
 
 > **注意：** `--typt` 值必定要是 `mysqld_db_t`。
