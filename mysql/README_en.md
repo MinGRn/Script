@@ -419,19 +419,19 @@ mysql> select user,host from user;
 
 # Migration data directory
 
-YUM 安装方式使用的默认数据存储目录是：`/var/lib/mysql/data`，如果在前面步骤按顺序走完后你会看到该文件夹有类似如下数据文件：
+YUM 安装方式使用的默认数据存储目录是：`/var/lib/mysql`，如果在前面步骤按顺序走完后你会看到该文件夹有类似如下数据文件：
 
 ```bash
-$ ls /var/lib/mysql/data
+$ ls /var/lib/mysql
 
 auto.cnf    client-cert.pem  ibdata1      ibtmp1              private_key.pem  server-key.pem
 ca-key.pem  client-key.pem   ib_logfile0  mysql               public_key.pem   sys
 ca.pem      ib_buffer_pool   ib_logfile1  performance_schema  server-cert.pem
 ```
 
-在实际应用中，我不不太可能会直接使用的数据存储文件，因为不利于管理。先在就来看看如何修改数据存储目录！
+在实际应用中，我们不太可能会直接使用默认的数据目录存储数据，因为不利于管理。现在就来看看如何修改数据存储目录！
 
-MySQL 的服务启动配置文件通常为 `my.cnf`，并存储在 `/etc` 目录下。但各个版本也可能存储在差异，所以我们要首先看下当前版本配置文件名是什么，存储在哪里。
+MySQL 的服务启动配置文件通常为 `my.cnf`，并存储在 `/etc` 目录下。但各个版本也可能存在差异，所以我们要首先看下当前版本配置文件名是什么，存储在哪里。
 
 在命令终端输入 `mysql --help` 查看帮助命令，你会在输出信息中看到有如下一段信息：
 
@@ -480,7 +480,7 @@ log-error=/var/log/mysqld.log
 pid-file=/var/run/mysqld/mysqld.pid
 ```
 
-注意 `datadir=/opt/mysql/data` 这段就是数据目录的配置。我们应该直接修改数据存储目录，所以该目录下没有任何数据，如果你想继续沿用之前的数据，只需要将之前的数据文件放置在该目录下即可！当前演示需要，不会放置任何数据。另外，先将已存在的 `/var/log/mysqld.log` 日志文件删除，以免影响后续操作！
+**注意：** `datadir=/opt/mysql/data` 这段就是数据目录的配置。我们直接修改数据存储目录，所以该目录下没有任何数据，如果你想继续沿用之前的数据，只需要将之前的数据文件拷贝到该目录下即可！当前演示需要，不会放置任何数据。另外，先将已存在的 `/var/log/mysqld.log` 日志文件删除，以免影响后续操作！
 
 修改完成后进行保存，现在来看下当前目录的归属用户与权限：
 
@@ -490,7 +490,7 @@ $ ll /opt/mysql
 drwxr-xr-x. 5 root root  4096 11月 23 13:45 data
 ```
 
-所以，我们还需要修改该文件的归属用户权限。`YUM` 命令安装 `MySQL` 通常会创建 `mysql` 用户和 `mysql` 用户组。我们可以分别看下 `/etc` 下的 `passwd` 文件内容和 `group` 内容：
+所以，我们还需要修改该文件的归属用户权限。`YUM` 命令安装 `MySQL` 通常会默认创建 `mysql` 用户和 `mysql` 用户组。我们可以分别看下 `/etc` 下的 `passwd` 文件内容和 `group` 内容：
 
 > `/etc` 目录下 `passwd` 文件存储的是用户信息，`group` 文件存储的是用户组信息。
 
@@ -538,11 +538,11 @@ Job for mysqld.service failed because the control process exited with error code
 [Warning] Can't create test file /opt/mysql/data/localhost.lower-test
 ```
 
-如果出现该信息继续阅读 [Can't create test file xxx.lower-test](#Can't create test file xxx.lower-test) ，如果没有请直接跳过！
+如果出现该信息继续阅读 [Can't create test file xxx.lower-test](#) ，如果没有请直接跳过！
 
 ## Can't create test file xxx.lower-test
 
-看到该错误信息后，你各种度娘、谷歌、stackoverflow。你会发现，所有的答案都指向 `selinux`。告诉你，需要修改 `/etc/selinux/config` 配置文件，将该文件中的 `SELINUX=enforcing` 修改为 `SELINUX=disabled`，然后 `reboot` 即可！
+看到该错误信息后，你各种度娘、谷歌、stackoverflow，一顿操作猛如虎，回头一看你会发现，所有的答案都指向 `selinux`。告诉你，需要修改 `/etc/selinux/config` 配置文件，将该文件中的 `SELINUX=enforcing` 修改为 `SELINUX=disabled`，然后 `reboot` 即可！
 
 事实确实如此，那么 `selinux` 到底是什么？这个我们需要先弄明白！
 
@@ -573,6 +573,8 @@ SELinux 项目在 2000 年以 GPL 协议的形式开源，当 Red Hat 在其 Lin
 为了使读者清楚地了解 SELinux 所扮演的角色，这里举一个例子，假设 apache 上发现了一个漏洞，使得某个远程用户可以访问系统的敏感文件（如 /etc/shadow）。如果我们的 Linux 中启用了 SELinux，那么，因为 apache 服务的进程并不具备访问 /etc/shadow 的权限，所以这个远程用户通过 apache 访问 /etc/shadow文件就会被 SELinux 所阻挡，起到保护 Linux 系统的作用。
 
 以上来源：[SELinux管理](http://c.biancheng.net/view/1147.html)
+
+----
 
 所以，现在现在禁用 `selinux`。
 
@@ -614,7 +616,9 @@ Linux 有一个工具：`semanage`，该工具就是用来管理 `selinux` 的�
   
 被默认可以使用的http端口如下：可使用命令 `semanage port -l | grep http_port_t` 查看，结果如下：
 
-```
+```bash
+$ semanage port -l | grep http_port_t
+
 http_port_t                    tcp      80, 81, 443, 488, 8008, 8009, 8443, 9000
 pegasus_http_port_t            tcp      5988
 ```
@@ -629,7 +633,7 @@ pegasus_http_port_t            tcp      5988
 
 为了保证安全，SELinux是不能关闭的，所以，只能让SELinux加入通行规则，开放一些端口，让所有用户(当然也可以是指定的用户)能够使用。
 
-所以，我们也应该为 MySQL 服务增加一些同行规则！
+所以，我们也应该为 MySQL 服务增加一些通行规则！
 
 先来安装 `semanage`：
 
@@ -671,17 +675,19 @@ $ yum install -y policycoreutils-python
 我们的 MySQL 数据目录是 `/opt/mysql`，所以执行命令如下所示：
 
 ```bash
-$ sudo semanage fcontext -add --typt mysqld_db_t "/opt/mysql(/.*)?"
+$ sudo semanage fcontext --add --typt mysqld_db_t "/opt/mysql(/.*)?"
 ```
+
+> **注意：** `--typt` 值必定要是 `mysqld_db_t`。
 
 执行完成后，继续执行如下命令：
 
 ```bash
-$ restorecon -rV /opt/mysql
+$ restorecon -rv /opt/mysql
 ```
 
 > restorecon 是什么命令，不做具体科普了，可以查阅一下 SELinux 安全上下文修改（`chcon`、`restorecon`、`semanage`）相关命令！
 
-执行完成后，即可使用 `systemctl start mysqld.service` 了，执行完成后我们需要查看 `/var/log/mysqld.log` 文件查看 MySQL 初始 root 密码，然后登陆修改即可！
+执行完成后，即可使用 `systemctl start mysqld.service` 了，执行完成后我们需要查看 `/var/log/mysqld.log` 文件查看 MySQL 初始 root 密码，然后登陆修改，完成剩余操作即可！
 
 至此，YUM 安装方式数据目录就修改完成了！
